@@ -1,0 +1,18 @@
+[project]
+name = "fastapi-infra-kit"
+version = "1.0.0"
+description = "A FastAPI infrastructure kit for building robust applications"
+readme = "README.md"
+requires-python = "==3.12.1"
+dependencies = [
+    "alembic==1.16.4",
+    "asyncpg>=0.30.0",
+    "fastapi[standard-no-fastapi-cloud-cli]==0.116.1",
+    "psycopg2-binary==2.9.10",
+    "pydantic-settings==2.10.1",
+    "python-json-logger==3.3.0",
+    "python-multipart==0.0.20",
+    "ruff==0.12.7",
+    "sqlalchemy==2.0.42",
+    "structlog==25.4.0",
+]
