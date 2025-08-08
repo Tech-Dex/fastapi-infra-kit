@@ -1,9 +1,9 @@
 import os
 import secrets
 from binascii import hexlify
+from typing import Optional
 
 from pydantic_settings import BaseSettings
-from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -28,7 +28,11 @@ class Settings(BaseSettings):
 
     # Logging
     LOG_LEVEL: str = "INFO"
-    LOG_FORMAT: str = "json"  # json or console
+    LOG_JSON_FORMAT: bool = True
+    LOG_FILE_PATH: str = "/tmp/myapp/logs/app.log"
+    LOG_ROTATION: str = "500 MB"
+    LOG_RETENTION: str = "7 days"
+    LOG_COMPRESSION: str = "zip"
 
     # Environment
     ENVIRONMENT: str = "development"

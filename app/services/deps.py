@@ -1,6 +1,8 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Query
+from fastapi_pagination import set_page, set_params
+from fastapi_pagination.cursor import CursorPage, CursorParams
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
@@ -12,6 +14,12 @@ SessionDep = Annotated[AsyncSession, Depends(get_db)]
 def check_alphanumeric_dash_underscore_path_params(
     path_params: list[str],
 ):
+    """
+    Check if path parameters contain only alphanumeric characters, dashes, and underscores.
+    :param path_params:
+    :return:
+    """
+
     async def _callback(request: Request):
         for param in path_params:
             value = request.path_params.get(param)
@@ -23,5 +31,23 @@ def check_alphanumeric_dash_underscore_path_params(
                     "Only alphanumeric characters, dashes, and underscores are allowed."
                 )
         return request
+
+    return _callback
+
+
+def set_pagination(model: type):
+    """
+    Pagination dependency for FastAPI using CursorPage and CursorParams.
+    This function sets up pagination parameters for a given model.
+    :param model:
+    :return: A callback function that sets pagination parameters.
+    """
+
+    async def _callback(
+        cursor: str = Query(None, description="Cursor for pagination"),
+        size: int = Query(10, description="Page size"),
+    ):
+        set_page(CursorPage[model])
+        set_params(CursorParams(cursor=cursor, size=size))
 
     return _callback
