@@ -4,16 +4,23 @@ from datetime import datetime, timezone
 from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from loguru import logger
+from pydantic import ValidationError
 from starlette.responses import FileResponse
 
 from app.api.v1.router import PREFIX
 from app.api.v1.router import router_http as api_v1_router_http
 from app.core.config import settings
+from app.core.exception_handlers import (api_exception_handler,
+                                         generic_exception_handler,
+                                         not_found_exception_handler,
+                                         validation_exception_handler)
 from app.core.logger import setup_logging
 from app.core.middleware.request_logger import RequestLoggerMiddleware
+from app.exceptions.api_exceptions import APIException
 
 # Setup logging
 
@@ -65,6 +72,17 @@ app.add_middleware(
 app.add_middleware(RequestLoggerMiddleware)
 
 # Exception handlers
+app.add_exception_handler(APIException, api_exception_handler)  # extends HTTPException
+
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(ValidationError, validation_exception_handler)
+
+app.add_exception_handler(
+    404, not_found_exception_handler
+)  # Handler for route not found
+
+app.add_exception_handler(Exception, generic_exception_handler)
+
 
 # Routers
 app.include_router(api_v1_router_http, prefix=PREFIX, tags=["v1"])
@@ -95,5 +113,5 @@ async def favicon():
     return FileResponse("static/favicon.ico")
 
 
-# TODO: custom exception handlers, redis, unit tests.
+# TODO: redis, unit tests.
 # TODO: later: communicate with loki for logs, add prometheus metric

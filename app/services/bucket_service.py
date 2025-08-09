@@ -6,18 +6,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.exceptions.custom_exceptions import NotFoundException
+from app.exceptions.api_exceptions import NotFoundException
+from app.exceptions.sqlalchemy_exception_handler import \
+    sqlalchemy_exception_handler
 from app.models.bucket import Bucket
 from app.models.event import Event
 from app.schemas.bucket import BucketResponse
 from app.schemas.event import EventCreate, EventResponse
 from app.schemas.mixin import BucketEventMixin
-from app.services.error_handler import exception_handler
 
 
 class BucketService:
     @staticmethod
-    @exception_handler
+    @sqlalchemy_exception_handler(resource_name="Buckets")
     async def get_all_buckets(session: AsyncSession) -> CursorPage[BucketResponse]:
         """
         Retrieve all buckets with pagination.
@@ -31,7 +32,7 @@ class BucketService:
         )
 
     @staticmethod
-    @exception_handler
+    @sqlalchemy_exception_handler(resource_name="Bucket")
     async def get_bucket_by_name(session: AsyncSession, bucket_name: str) -> Bucket:
         """
         Retrieve a bucket by name.
@@ -50,7 +51,7 @@ class BucketService:
         return result.scalars().one()
 
     @staticmethod
-    @exception_handler
+    @sqlalchemy_exception_handler(resource_name="Bucket")
     async def create_bucket_with_event(
         session: AsyncSession, name: str, event: EventCreate
     ) -> BucketEventMixin:
@@ -85,7 +86,7 @@ class BucketService:
         )
 
     @staticmethod
-    @exception_handler
+    @sqlalchemy_exception_handler(resource_name="Events")
     async def get_bucket_with_events(
         session: AsyncSession, bucket_name: str
     ) -> tuple[Bucket, CursorPage]:

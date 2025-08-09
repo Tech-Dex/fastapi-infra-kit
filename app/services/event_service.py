@@ -4,14 +4,15 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.exceptions.sqlalchemy_exception_handler import \
+    sqlalchemy_exception_handler
 from app.models.event import Event
 from app.services.bucket_service import BucketService
-from app.services.error_handler import exception_handler
 
 
 class EventService:
     @staticmethod
-    @exception_handler
+    @sqlalchemy_exception_handler(resource_name="Event")
     async def get_event_by_id(session: AsyncSession, event_id: uuid.UUID) -> Event:
         """
         Retrieve an event by its ID.
@@ -25,7 +26,7 @@ class EventService:
         return result.scalars().one()
 
     @staticmethod
-    @exception_handler
+    @sqlalchemy_exception_handler(resource_name="Event")
     async def get_event_in_bucket(
         session: AsyncSession, bucket_name: str, event_id: uuid.UUID
     ) -> Event:

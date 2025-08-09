@@ -8,12 +8,15 @@ from app.core.config import settings
 
 logger.remove()
 
+# Clean logs in terminal
 logger.add(
     sys.stdout,
-    serialize=settings.LOG_JSON_FORMAT,
+    serialize=True,
     enqueue=True,
     level=settings.LOG_LEVEL,
 )
+
+# Structured logs in file
 logger.add(
     settings.LOG_FILE_PATH,
     rotation=settings.LOG_ROTATION,
