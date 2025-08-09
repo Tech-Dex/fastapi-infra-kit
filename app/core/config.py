@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     DB_URL: Optional[str] = None
     DB_URL_SYNC: Optional[str] = None
 
+    # Redis
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: str = "events_db"
+    REDIS_USER: str = "default"
+    REDIS_PASSWORD: str = "password"
+    REDIS_URL: Optional[str] = None
+
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_JSON_FORMAT: bool = True
@@ -42,6 +50,7 @@ class Settings(BaseSettings):
         super().__init__(**kwargs)
         self.DB_URL = f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         self.DB_URL_SYNC = f"{self.DB_DRIVER_SYNC}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        self.REDIS_URL = f"redis://{self.REDIS_USER}:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
 
 settings = Settings(

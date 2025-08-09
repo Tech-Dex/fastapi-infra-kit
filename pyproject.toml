@@ -17,6 +17,7 @@ dependencies = [
     "pytest-asyncio>=1.1.0",
     "python-json-logger==3.3.0",
     "python-multipart==0.0.20",
+    "redis==6.4.0",
     "ruff==0.12.7",
     "sqlakeyset==2.0.1746777265",
     "sqlalchemy==2.0.42",

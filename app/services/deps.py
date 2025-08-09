@@ -3,13 +3,16 @@ from typing import Annotated
 from fastapi import Depends, Query
 from fastapi_pagination import set_page, set_params
 from fastapi_pagination.cursor import CursorPage, CursorParams
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
 from app.core.database import get_db
+from app.core.redis import get_redis
 from app.exceptions.api_exceptions import UnprocessableEntityException
 
 SessionDep = Annotated[AsyncSession, Depends(get_db)]
+RedisDep = Annotated[Redis, Depends(get_redis)]
 
 
 def check_alphanumeric_dash_underscore_path_params(
