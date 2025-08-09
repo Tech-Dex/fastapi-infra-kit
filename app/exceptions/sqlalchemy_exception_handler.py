@@ -1,4 +1,3 @@
-# app/services/sqlalchemy_exception_handler.py
 import functools
 from typing import Optional
 
@@ -53,7 +52,8 @@ def sqlalchemy_exception_handler(
                     )
                 raise AlreadyExistsException(resource=resource_name) from exception
             except Exception as exception:
-                logger.error("Unexpected error: %s", str(exception), exc_info=True)
+                print(exception)
+                logger.error(f"Unexpected error: {str(exception)}", exc_info=True)
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Something went wrong, please contact support.",

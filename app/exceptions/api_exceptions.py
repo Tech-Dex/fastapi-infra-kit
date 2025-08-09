@@ -31,3 +31,8 @@ class NotFoundException(APIException):
 class AlreadyExistsException(APIException):
     def __init__(self, resource: str):
         super().__init__(f"{resource} already exists", 409)
+
+
+class UnprocessableEntityException(APIException):
+    def __init__(self, message: str = "Unprocessable entity"):
+        super().__init__(message, 422)

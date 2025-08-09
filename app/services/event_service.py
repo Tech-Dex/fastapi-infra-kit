@@ -1,4 +1,3 @@
-# app/services/event_service.py
 import uuid
 
 from sqlalchemy import select

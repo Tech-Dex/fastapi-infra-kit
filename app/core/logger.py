@@ -11,7 +11,7 @@ logger.remove()
 # Clean logs in terminal
 logger.add(
     sys.stdout,
-    serialize=True,
+    # serialize=True,
     enqueue=True,
     level=settings.LOG_LEVEL,
 )

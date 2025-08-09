@@ -114,6 +114,31 @@ async def not_found_exception_handler(request: Request, exc: Exception) -> JSONR
     )
 
 
+async def method_not_allowed_exception_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
+    """Handle 405 Method Not Allowed errors"""
+    logger_exception_handler.error(
+        f"Method Not Allowed error on {request.url}: {str(exc)}"
+    )
+
+    return JSONResponse(
+        status_code=405,
+        content={
+            "error": {
+                "type": "method_not_allowed",
+                "code": 405,
+                "message": "Method not allowed",
+                "path": str(request.url),
+                "method": request.method,
+                "timestamp": str(request.state.timestamp)
+                if hasattr(request.state, "timestamp")
+                else None,
+            }
+        },
+    )
+
+
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle unexpected exceptions"""
     logger_exception_handler.error(f"Unexpected error on {request.url}: {str(exc)}")

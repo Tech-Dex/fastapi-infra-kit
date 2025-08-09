@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
 from app.core.database import get_db
+from app.exceptions.api_exceptions import UnprocessableEntityException
 
 SessionDep = Annotated[AsyncSession, Depends(get_db)]
 
@@ -26,7 +27,7 @@ def check_alphanumeric_dash_underscore_path_params(
 
             # Faster than using regex?
             if value and not value.replace("-", "").replace("_", "").isalnum():
-                raise ValueError(
+                raise UnprocessableEntityException(
                     f"Invalid value for {param}: {value}. "
                     "Only alphanumeric characters, dashes, and underscores are allowed."
                 )

@@ -31,6 +31,7 @@ async def fetch_buckets(session: SessionDep) -> CursorPage[BucketResponse]:
 
 @router.put(
     "/{name}",
+    status_code=201,
     dependencies=[Depends(check_alphanumeric_dash_underscore_path_params(["name"]))],
 )
 async def send_event_to_bucket(

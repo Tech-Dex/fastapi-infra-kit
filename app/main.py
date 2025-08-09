@@ -16,6 +16,7 @@ from app.api.v1.router import router_http as api_v1_router_http
 from app.core.config import settings
 from app.core.exception_handlers import (api_exception_handler,
                                          generic_exception_handler,
+                                         method_not_allowed_exception_handler,
                                          not_found_exception_handler,
                                          validation_exception_handler)
 from app.core.logger import setup_logging
@@ -23,9 +24,7 @@ from app.core.middleware.request_logger import RequestLoggerMiddleware
 from app.exceptions.api_exceptions import APIException
 
 # Setup logging
-
 setup_logging()
-
 logger_startup = logger.bind(source="startup")
 
 startup_time = datetime.now(timezone.utc)
@@ -77,9 +76,8 @@ app.add_exception_handler(APIException, api_exception_handler)  # extends HTTPEx
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(ValidationError, validation_exception_handler)
 
-app.add_exception_handler(
-    404, not_found_exception_handler
-)  # Handler for route not found
+app.add_exception_handler(404, not_found_exception_handler)
+app.add_exception_handler(405, method_not_allowed_exception_handler)
 
 app.add_exception_handler(Exception, generic_exception_handler)
 
@@ -113,5 +111,5 @@ async def favicon():
     return FileResponse("static/favicon.ico")
 
 
-# TODO: redis, unit tests.
+# TODO: redis
 # TODO: later: communicate with loki for logs, add prometheus metric

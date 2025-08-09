@@ -1,5 +1,3 @@
-# app/services/bucket_service.py
-
 from fastapi_pagination.cursor import CursorPage
 from fastapi_pagination.ext.sqlalchemy import apaginate
 from sqlalchemy import select
