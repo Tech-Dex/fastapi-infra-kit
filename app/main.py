@@ -111,5 +111,4 @@ async def favicon():
     return FileResponse("static/favicon.ico")
 
 
-# TODO: redis
 # TODO: later: communicate with loki for logs, add prometheus metric

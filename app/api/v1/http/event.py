@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, Query
+from starlette import status
 
 from app.schemas.bucket import BucketResponse
 from app.schemas.event import EventResponse
@@ -15,8 +16,11 @@ router: APIRouter = APIRouter()
 
 @router.get(
     "/",
+    summary="Fetch Events in a Bucket",
+    description="Retrieve all events in a specific bucket with pagination support.  The response is paginated using cursor-based pagination.",
     response_model=BucketEventsMixin,
     dependencies=[Depends(set_pagination(EventResponse))],
+    status_code=status.HTTP_200_OK,
 )
 @redis_cache("bucket_events:{bucket_name}:cursor={cursor}:size={size}", ttl=3600)
 async def fetch_bucket_events(
@@ -42,7 +46,13 @@ async def fetch_bucket_events(
     )
 
 
-@router.get("/{event_ID}")
+@router.get(
+    "/{event_ID}",
+    summary="Fetch Event by ID in a Bucket",
+    description="Retrieve a specific event by its ID within a bucket.",
+    response_model=EventResponse,
+    status_code=status.HTTP_200_OK,
+)
 @redis_cache("event:{bucket_name}:{event_ID}", ttl=3600)
 async def fetch_event(
     bucket_name: str,

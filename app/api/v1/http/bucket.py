@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi_pagination.cursor import CursorPage
+from starlette import status
 
 from app.schemas.bucket import BucketResponse
 from app.schemas.event import EventCreate
@@ -16,8 +17,11 @@ router: APIRouter = APIRouter()
 
 @router.get(
     "/",
+    name="Fetch All Buckets",
+    description="Fetch all buckets with pagination support. The response is paginated using cursor-based pagination.",
     response_model=CursorPage[BucketResponse],
     dependencies=[Depends(set_pagination(BucketResponse))],
+    status_code=status.HTTP_200_OK,
 )
 @redis_cache("buckets:cursor={cursor}:size={size}", ttl=3600)
 async def fetch_buckets(
@@ -40,7 +44,9 @@ async def fetch_buckets(
 
 @router.put(
     "/{bucket_name}",
-    status_code=201,
+    name="Send Event to Bucket",
+    description="Send event to bucket. The bucket name must be alphanumeric, dash, or underscore. Creates the bucket if it does not exist.",
+    status_code=status.HTTP_201_CREATED,
     dependencies=[
         Depends(check_alphanumeric_dash_underscore_path_params(["bucket_name"]))
     ],

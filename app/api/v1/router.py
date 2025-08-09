@@ -6,7 +6,7 @@ router_http: APIRouter = APIRouter()
 PREFIX: str = "/v1"
 
 
-router_http.include_router(bucket.router, prefix="/buckets", tags=["Bucket"])
+router_http.include_router(bucket.router, prefix="/buckets", tags=["Buckets"])
 router_http.include_router(
     event.router, prefix="/buckets/{bucket_name}/events", tags=["Events"]
 )
