@@ -1,0 +1,128 @@
+services:
+  caddy:
+    image: caddy:alpine
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - fastapi
+    ports:
+      - "80:80"
+    networks:
+      - event-manager-network
+
+
+  fastapi:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - log-volume:/tmp/event-manager/logs
+    env_file:
+      - sample.docker-compose.env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - event-manager-network
+    ports:
+      - "8000:8000"
+
+
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=db_password
+      - POSTGRES_DB=event-manager
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - event-manager-network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d db_password" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    container_name: dev-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password
+    ports:
+      - "6379:6379"
+    networks:
+      - event-manager-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "auth", "redis_password", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  loki:
+    image: grafana/loki:3.5.3 # Recommended by Loki to lock a specific version
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    user: "0"
+    volumes:
+      - ./visualization/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+      - loki-wal:/wal
+    ports:
+      - "3100:3100"
+    networks:
+      - event-manager-network
+
+  promtail:
+    image: grafana/promtail:3.5 # Recommended by Promtail to lock a specific version
+    restart: unless-stopped
+    volumes:
+      - log-volume:/var/log/event-manager:ro
+      - ./visualization/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    ports:
+      - "9081:9080"
+    networks:
+      - event-manager-network
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=grafana_password
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - loki
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./visualization/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - event-manager-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./visualization/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - event-manager-network
+
+volumes:
+  log-volume:
+  pgdata:
+  grafana-storage:
+  loki-wal:
+  loki-data:
+
+networks:
+    event-manager-network:
+        driver: bridge

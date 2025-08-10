@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_JSON_FORMAT: bool = True
-    LOG_FILE_PATH: str = "/tmp/myapp/logs/app.jsonl"
+    LOG_FILE_PATH: str = "/tmp/event-manager/logs/default.jsonl"
     LOG_ROTATION: str = "500 MB"
     LOG_RETENTION: str = "7 days"
     LOG_COMPRESSION: str = "zip"

@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from loguru import logger
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import ValidationError
 from starlette.responses import FileResponse
 
@@ -58,6 +59,8 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+Instrumentator().instrument(app).expose(app)
 
 add_pagination(app)
 
