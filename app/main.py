@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import os
 
 from alembic import command
 from alembic.config import Config
@@ -37,7 +38,13 @@ async def lifespan(app: FastAPI):
 
     try:
         logger_startup.info("Running database migrations")
-        alembic_cfg = Config("app/alembic/alembic.ini")
+        alembic_ini_path = "app/alembic/alembic.ini"
+        alembic_sample_ini_path = "app/alembic/sample.alembic.ini"
+        if not os.path.exists(alembic_ini_path):
+            logger_startup.warning(f"{alembic_ini_path} not found. Creating from sample.")
+            with open(alembic_sample_ini_path, "r") as src, open(alembic_ini_path, "w") as dst:
+                dst.write(src.read())
+        alembic_cfg = Config(alembic_ini_path)
         alembic_cfg.set_main_option("script_location", "app/alembic")
         alembic_cfg.set_main_option("sqlalchemy.url", settings.DB_URL_SYNC)
 

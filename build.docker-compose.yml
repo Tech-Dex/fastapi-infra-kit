@@ -13,7 +13,7 @@ services:
 
 
   fastapi:
-    image: ghcr.io/tech-dex/fastapi-infra-kit:latest
+    build: .
     restart: unless-stopped
     volumes:
       - log-volume:/tmp/event-manager/logs
