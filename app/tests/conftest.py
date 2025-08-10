@@ -4,6 +4,7 @@ from typing import AsyncGenerator, Generator
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
                                     create_async_engine)
 from sqlalchemy.orm import sessionmaker
@@ -14,8 +15,6 @@ from testcontainers.redis import RedisContainer
 from app.core.database import Base, get_db
 from app.core.redis import get_redis
 from app.main import app
-from redis import asyncio as aioredis
-
 
 
 class DatabaseManager:
@@ -204,6 +203,7 @@ async def app_with_db(db_session: AsyncSession):
         else:
             app.dependency_overrides.pop(get_db, None)
 
+
 @pytest_asyncio.fixture
 def app_with_db_and_redis(app_with_db, redis_container):
     """Override get_redis to use the test Redis container."""
@@ -241,6 +241,7 @@ async def async_client(app_with_db_and_redis) -> AsyncGenerator[AsyncClient, Non
 
 
 # Alternative fixtures for different test scenarios
+
 
 @pytest_asyncio.fixture
 async def clean_redis(redis_container):
@@ -387,6 +388,7 @@ class AsyncTestHelper:
 def async_test_helper():
     """Provide async test helper utilities."""
     return AsyncTestHelper()
+
 
 @pytest_asyncio.fixture(scope="class", autouse=True)
 async def clean_db_for_class(setup_database: DatabaseManager):

@@ -121,9 +121,7 @@ class TestCreateBucketIntegration:
         assert response.status_code == 422
         assert response_data.get("error").get("message") == "Validation failed"
         assert sample_detail_event_title_required in response_data["error"]["details"]
-        assert (
-            sample_detail_event_message_required in response_data["error"]["details"]
-        )
+        assert sample_detail_event_message_required in response_data["error"]["details"]
 
     async def test_create_bucket_with_event_rejects_missing_title(
         self,
@@ -265,4 +263,7 @@ class TestFetchBucketIntegration:
         response = await async_client.get(f"{default_path}/")
         response_data = response.json()
         assert response.status_code == 200
-        assert any(bucket["name"] == sample_bucket_name_valid for bucket in response_data["items"])
+        assert any(
+            bucket["name"] == sample_bucket_name_valid
+            for bucket in response_data["items"]
+        )
