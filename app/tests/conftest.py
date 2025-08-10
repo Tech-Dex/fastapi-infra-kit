@@ -387,3 +387,10 @@ class AsyncTestHelper:
 def async_test_helper():
     """Provide async test helper utilities."""
     return AsyncTestHelper()
+
+@pytest_asyncio.fixture(scope="class", autouse=True)
+async def clean_db_for_class(setup_database: DatabaseManager):
+    """Clean database before each test class."""
+    async with setup_database.engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)

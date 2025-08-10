@@ -75,8 +75,9 @@ class TestCreateBucketIntegration:
             f"{default_path}/{sample_bucket_name_valid}",
             json=sample_event_create.model_dump(),
         )
+        response_data = response.json()
         assert response.status_code == 201
-        assert response.json().get("name") == sample_bucket_name_valid
+        assert response_data.get("name") == sample_bucket_name_valid
 
     async def test_create_bucket_with_event_rejects_invalid_bucket_name(
         self,
@@ -89,8 +90,9 @@ class TestCreateBucketIntegration:
             f"{default_path}/{sample_bucket_name_invalid}",
             json=sample_event_create.model_dump(),
         )
+        response_data = response.json()
         assert response.status_code == 422
-        assert response.json().get("error").get("message") == (
+        assert response_data.get("error").get("message") == (
             f"Invalid value for bucket_name: {sample_bucket_name_invalid}. Only alphanumeric characters, dashes, and underscores are allowed."
         )
 
@@ -100,8 +102,9 @@ class TestCreateBucketIntegration:
         response = await async_client.put(
             f"{default_path}/", json=sample_event_create.model_dump()
         )
+        response_data = response.json()
         assert response.status_code == 405
-        assert response.json().get("error").get("message") == "Method not allowed"
+        assert response_data.get("error").get("message") == "Method not allowed"
 
     async def test_create_bucket_with_event_rejects_missing_body(
         self,
@@ -114,11 +117,12 @@ class TestCreateBucketIntegration:
         response = await async_client.put(
             f"{default_path}/{sample_bucket_name_valid}", json={}
         )
+        response_data = response.json()
         assert response.status_code == 422
-        assert response.json().get("error").get("message") == "Validation failed"
-        assert sample_detail_event_title_required in response.json()["error"]["details"]
+        assert response_data.get("error").get("message") == "Validation failed"
+        assert sample_detail_event_title_required in response_data["error"]["details"]
         assert (
-            sample_detail_event_message_required in response.json()["error"]["details"]
+            sample_detail_event_message_required in response_data["error"]["details"]
         )
 
     async def test_create_bucket_with_event_rejects_missing_title(
@@ -136,10 +140,10 @@ class TestCreateBucketIntegration:
         response = await async_client.put(
             f"{default_path}/{sample_bucket_name_valid}", json=event_data
         )
-
+        response_data = response.json()
         assert response.status_code == 422
-        assert response.json().get("error").get("message") == "Validation failed"
-        assert sample_detail_event_title_required in response.json().get("error").get(
+        assert response_data.get("error").get("message") == "Validation failed"
+        assert sample_detail_event_title_required in response_data.get("error").get(
             "details"
         )
 
@@ -158,10 +162,10 @@ class TestCreateBucketIntegration:
         response = await async_client.put(
             f"{default_path}/{sample_bucket_name_valid}", json=event_data
         )
-
+        response_data = response.json()
         assert response.status_code == 422
-        assert response.json().get("error").get("message") == "Validation failed"
-        assert sample_detail_event_message_required in response.json().get("error").get(
+        assert response_data.get("error").get("message") == "Validation failed"
+        assert sample_detail_event_message_required in response_data.get("error").get(
             "details"
         )
 
@@ -180,10 +184,10 @@ class TestCreateBucketIntegration:
         response = await async_client.put(
             f"{default_path}/{sample_bucket_name_valid}", json=event_data
         )
-
+        response_data = response.json()
         assert response.status_code == 422
-        assert response.json().get("error").get("message") == "Validation failed"
-        assert sample_detail_event_title_invalid in response.json().get("error").get(
+        assert response_data.get("error").get("message") == "Validation failed"
+        assert sample_detail_event_title_invalid in response_data.get("error").get(
             "details"
         )
 
@@ -202,10 +206,10 @@ class TestCreateBucketIntegration:
         response = await async_client.put(
             f"{default_path}/{sample_bucket_name_valid}", json=event_data
         )
-
+        response_data = response.json()
         assert response.status_code == 422
-        assert response.json().get("error").get("message") == "Validation failed"
-        assert sample_detail_event_message_invalid in response.json().get("error").get(
+        assert response_data.get("error").get("message") == "Validation failed"
+        assert sample_detail_event_message_invalid in response_data.get("error").get(
             "details"
         )
 
@@ -221,6 +225,44 @@ class TestCreateBucketIntegration:
         response = await async_client.put(
             f"{default_path}/{sample_bucket_name_valid}", json="invalid body"
         )
+        response_data = response.json()
         assert response.status_code == 422
-        assert response.json().get("error").get("message") == "Validation failed"
-        assert sample_body_invalid_type in response.json().get("error").get("details")
+        assert response_data.get("error").get("message") == "Validation failed"
+        assert sample_body_invalid_type in response_data.get("error").get("details")
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+@pytest.mark.api
+class TestFetchBucketIntegration:
+    @pytest.fixture
+    def sample_event_create(self):
+        return EventCreate(title="New Event", message="New event message")
+
+    @pytest.fixture
+    def sample_bucket_name_valid(self):
+        return "Test-Bucket_123"
+
+    @pytest.fixture
+    def default_path(self):
+        return "/v1/buckets"
+
+    async def test_fetch_buckets_empty(self, async_client, default_path):
+        response = await async_client.get(f"{default_path}/")
+        response_data = response.json()
+        assert response.status_code == 200
+        assert response_data.get("items") == []
+
+    async def test_fetch_buckets_with_data(
+        self, async_client, default_path, sample_bucket_name_valid, sample_event_create
+    ):
+        put_response = await async_client.put(
+            f"{default_path}/{sample_bucket_name_valid}",
+            json=sample_event_create.model_dump(),
+        )
+        assert put_response.status_code == 201
+
+        response = await async_client.get(f"{default_path}/")
+        response_data = response.json()
+        assert response.status_code == 200
+        assert any(bucket["name"] == sample_bucket_name_valid for bucket in response_data["items"])
