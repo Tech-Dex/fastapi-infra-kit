@@ -5,15 +5,20 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! docker compose version &> /dev/null; then
+if docker compose version &> /dev/null; then
+    echo "Pulling latest image for specific services..."
+    docker compose pull fastapi
+    echo "Starting services with Docker Compose..."
+    docker compose up -d --build
+else
     if ! command -v docker-compose &> /dev/null; then
         echo "Error: Docker Compose is not installed. Please install Docker Compose and try again."
         exit 1
     else
+        echo "Pulling latest image for specific services..."
+        docker-compose pull fastapi
+        echo "Starting services with Docker Compose..."
         docker-compose up -d --build
         exit $?
     fi
 fi
-
-docker compose up -d --build
-
