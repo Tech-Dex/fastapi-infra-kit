@@ -9,6 +9,7 @@ dependencies = [
     "asyncpg==0.30.0",
     "fastapi-pagination==0.13.3",
     "fastapi[standard-no-fastapi-cloud-cli]==0.116.1",
+    "greenlet==3.2.3",
     "isort==6.0.1",
     "loguru==0.7.3",
     "prometheus-fastapi-instrumentator==7.1.0",

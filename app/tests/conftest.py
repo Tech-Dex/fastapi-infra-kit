@@ -9,9 +9,13 @@ from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 from app.core.database import Base, get_db
+from app.core.redis import get_redis
 from app.main import app
+from redis import asyncio as aioredis
+
 
 
 class DatabaseManager:
@@ -72,8 +76,41 @@ class DatabaseManager:
         self.session_factory = None
 
 
+class RedisManager:
+    """Manages Redis container for integration tests"""
+
+    def __init__(self):
+        self.container: RedisContainer = None
+        self.url = None
+
+    async def setup(self):
+        self.container = RedisContainer()
+        self.container.start()
+        self.url = f"redis://{self.container.get_container_host_ip()}:{self.container.get_exposed_port(6379)}/0"
+        print(self.url)
+        return self.container
+
+    def get_url(self):
+        return self.url
+
+    async def teardown(self):
+        if self.container:
+            self.container.stop()
+            self.container = None
+
+
+@pytest_asyncio.fixture(scope="session")
+async def redis_container():
+    await redis_manager.setup()
+    try:
+        yield redis_manager.get_url()
+    finally:
+        await redis_manager.teardown()
+
+
 # Global database manager instance
 db_manager = DatabaseManager()
+redis_manager = RedisManager()
 
 
 @pytest.fixture(scope="session")
@@ -167,9 +204,24 @@ async def app_with_db(db_session: AsyncSession):
         else:
             app.dependency_overrides.pop(get_db, None)
 
+@pytest_asyncio.fixture
+def app_with_db_and_redis(app_with_db, redis_container):
+    """Override get_redis to use the test Redis container."""
+
+    async def override_get_redis():
+        client = aioredis.from_url(redis_container, decode_responses=True)
+        yield client
+        await client.aclose()
+
+    app_with_db.dependency_overrides[get_redis] = override_get_redis
+    try:
+        yield app_with_db
+    finally:
+        app_with_db.dependency_overrides.pop(get_redis, None)
+
 
 @pytest_asyncio.fixture
-async def async_client(app_with_db) -> AsyncGenerator[AsyncClient, None]:
+async def async_client(app_with_db_and_redis) -> AsyncGenerator[AsyncClient, None]:
     """Create async HTTP client with proper timeout and configuration."""
     timeout_config = {
         "timeout": 30.0,
@@ -180,7 +232,7 @@ async def async_client(app_with_db) -> AsyncGenerator[AsyncClient, None]:
     }
 
     async with AsyncClient(
-        transport=ASGITransport(app=app_with_db),
+        transport=ASGITransport(app=app_with_db_and_redis),
         base_url="http://testserver",
         timeout=timeout_config,
         follow_redirects=True,
@@ -189,6 +241,15 @@ async def async_client(app_with_db) -> AsyncGenerator[AsyncClient, None]:
 
 
 # Alternative fixtures for different test scenarios
+
+@pytest_asyncio.fixture
+async def clean_redis(redis_container):
+    """Flush all data in the test Redis before each test."""
+
+    client = aioredis.from_url(redis_container, decode_responses=True)
+    await client.flushall()
+    yield client
+    await client.close()
 
 
 @pytest_asyncio.fixture

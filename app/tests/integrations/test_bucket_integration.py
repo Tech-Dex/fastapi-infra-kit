@@ -91,7 +91,7 @@ class TestCreateBucketIntegration:
         )
         assert response.status_code == 422
         assert response.json().get("error").get("message") == (
-            f"Invalid value for name: {sample_bucket_name_invalid}. Only alphanumeric characters, dashes, and underscores are allowed."
+            f"Invalid value for bucket_name: {sample_bucket_name_invalid}. Only alphanumeric characters, dashes, and underscores are allowed."
         )
 
     async def test_create_bucket_with_event_rejects_empty_bucket_name(
