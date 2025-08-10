@@ -69,4 +69,5 @@ async def fetch_event(
     :return: Event details.
     """
     event = await EventService.get_event_in_bucket(session, bucket_name, event_ID)
+
     return EventResponse.model_validate(event)

@@ -3,7 +3,7 @@ from fastapi_pagination.cursor import CursorPage
 from starlette import status
 
 from app.schemas.bucket import BucketResponse
-from app.schemas.event import EventCreate
+from app.schemas.event import EventCreate, EventResponse
 from app.schemas.mixin import BucketEventMixin
 from app.services.bucket_service import BucketService
 from app.services.deps import (RedisDep, SessionDep,
@@ -46,6 +46,7 @@ async def fetch_buckets(
     "/{bucket_name}",
     name="Send Event to Bucket",
     description="Send event to bucket. The bucket name must be alphanumeric, dash, or underscore. Creates the bucket if it does not exist.",
+    response_model=BucketEventMixin,
     status_code=status.HTTP_201_CREATED,
     dependencies=[
         Depends(check_alphanumeric_dash_underscore_path_params(["bucket_name"]))
@@ -56,7 +57,7 @@ async def fetch_buckets(
 )
 @invalidate_cache("buckets", CacheInvalidationEvent.EVENT_CREATED, recursive=True)
 async def send_event_to_bucket(
-    bucket_name: str, event: EventCreate, session: SessionDep, redis: RedisDep
+    bucket_name: str, event_create: EventCreate, session: SessionDep, redis: RedisDep
 ) -> BucketEventMixin:
     """
     Send an event to a specific bucket.
@@ -64,6 +65,13 @@ async def send_event_to_bucket(
     :param session: Database session dependency.
     :param redis: Redis dependency for caching.
     :param bucket_name: The name of the bucket, which must be alphanumeric, dash, or underscore.
-    :param event: The event data to be sent to the bucket.
+    :param event_create: The event data to be sent to the bucket.
     """
-    return await BucketService.create_bucket_with_event(session, bucket_name, event)
+    bucket, event = await BucketService.create_bucket_with_event(
+        session, bucket_name, event_create
+    )
+
+    return BucketEventMixin(
+        **BucketResponse.model_validate(bucket).model_dump(),
+        event=EventResponse.model_validate(event).model_dump(),
+    )

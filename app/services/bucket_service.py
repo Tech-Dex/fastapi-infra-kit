@@ -11,7 +11,6 @@ from app.models.bucket import Bucket
 from app.models.event import Event
 from app.schemas.bucket import BucketResponse
 from app.schemas.event import EventCreate, EventResponse
-from app.schemas.mixin import BucketEventMixin
 
 
 class BucketService:
@@ -51,14 +50,14 @@ class BucketService:
     @staticmethod
     @sqlalchemy_exception_handler(resource_name="Bucket")
     async def create_bucket_with_event(
-        session: AsyncSession, name: str, event: EventCreate
-    ) -> BucketEventMixin:
+        session: AsyncSession, name: str, event_create: EventCreate
+    ) -> tuple[Bucket, Event]:
         """
         Create or update a bucket and add an event to it.
 
         :param session: Database session
         :param name: Bucket name
-        :param event: Event data to add
+        :param event_create: Event data to add
         :return: Bucket with the newly created event
         """
         # Try to get existing bucket or create new one
@@ -68,26 +67,23 @@ class BucketService:
             bucket = Bucket(name=name)
             session.add(bucket)
 
-        event_orm = Event(
-            title=event.title,
-            message=event.message,
+        event = Event(
+            title=event_create.title,
+            message=event_create.message,
         )
-        bucket.events.append(event_orm)
+        bucket.events.append(event)
 
         await session.commit()
-        await session.refresh(bucket)
-        await session.refresh(event_orm)
+        await session.refresh(event)
+        await session.refresh(event)
 
-        return BucketEventMixin(
-            **BucketResponse.model_validate(bucket).model_dump(),
-            event=EventResponse.model_validate(event_orm).model_dump(),
-        )
+        return bucket, event
 
     @staticmethod
     @sqlalchemy_exception_handler(resource_name="Events")
     async def get_bucket_with_events(
         session: AsyncSession, bucket_name: str
-    ) -> tuple[Bucket, CursorPage]:
+    ) -> tuple[Bucket, CursorPage[EventResponse]]:
         """
         Get a bucket and its paginated events.
 
