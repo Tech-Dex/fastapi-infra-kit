@@ -27,6 +27,7 @@ def check_alphanumeric_dash_underscore_path_params(
     async def _callback(request: Request):
         for param in path_params:
             value = request.path_params.get(param)
+            print(value)
 
             # Faster than using regex?
             if value and not value.replace("-", "").replace("_", "").isalnum():

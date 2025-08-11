@@ -7,7 +7,9 @@ from app.schemas.bucket import BucketResponse
 from app.schemas.event import EventResponse
 from app.schemas.mixin import BucketEventsMixin
 from app.services.bucket_service import BucketService
-from app.services.deps import RedisDep, SessionDep, set_pagination
+from app.services.deps import (RedisDep, SessionDep,
+                               check_alphanumeric_dash_underscore_path_params,
+                               set_pagination)
 from app.services.event_service import EventService
 from app.services.redis_service import redis_cache
 
@@ -19,7 +21,10 @@ router: APIRouter = APIRouter()
     summary="Fetch Events in a Bucket",
     description="Retrieve all events in a specific bucket with pagination support.  The response is paginated using cursor-based pagination.",
     response_model=BucketEventsMixin,
-    dependencies=[Depends(set_pagination(EventResponse))],
+    dependencies=[
+        Depends(set_pagination(EventResponse)),
+        Depends(check_alphanumeric_dash_underscore_path_params(["bucket_name"])),
+    ],
     status_code=status.HTTP_200_OK,
 )
 @redis_cache("bucket_events:{bucket_name}:cursor={cursor}:size={size}", ttl=3600)
@@ -51,6 +56,9 @@ async def fetch_bucket_events(
     summary="Fetch Event by ID in a Bucket",
     description="Retrieve a specific event by its ID within a bucket.",
     response_model=EventResponse,
+    dependencies=[
+        Depends(check_alphanumeric_dash_underscore_path_params(["bucket_name"])),
+    ],
     status_code=status.HTTP_200_OK,
 )
 @redis_cache("event:{bucket_name}:{event_ID}", ttl=3600)
