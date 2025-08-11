@@ -8,7 +8,7 @@ fi
 if docker compose version &> /dev/null; then
     echo "Pulling latest image for specific services..."
     docker compose pull fastapi
-    echo "Starting services with Docker Compose..."
+    echo "Starting services with Docker Compose, using registry ghcr.io/tech-dex/fastapi-infra-kit:latest"
     docker compose up -d --build
 else
     if ! command -v docker-compose &> /dev/null; then
@@ -17,7 +17,7 @@ else
     else
         echo "Pulling latest image for specific services..."
         docker-compose pull fastapi
-        echo "Starting services with Docker Compose..."
+        echo "Starting services with Docker Compose, using registry ghcr.io/tech-dex/fastapi-infra-kit:latest"
         docker-compose up -d --build
         exit $?
     fi
